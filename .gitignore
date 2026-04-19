@@ -21,9 +21,13 @@ __pycache__/
 
 # Secrets and local DB
 .env
-.env.local
+.env.*
+!.env.example
 *.sqlite
 *.sqlite3
+
+# Local logs
+*.log
 
 # Large / generated data (keep locally; use Colab bundle or scripts to recreate)
 data/*.faiss
