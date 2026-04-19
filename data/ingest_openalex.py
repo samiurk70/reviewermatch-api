@@ -19,6 +19,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential
 from tqdm import tqdm
 
 OPENALEX_BASE = os.environ.get("OPENALEX_BASE_URL", "https://api.openalex.org").rstrip("/")
+OPENALEX_API_KEY = os.environ.get("OPENALEX_API_KEY", "").strip()
 
 # Concept IDs (OpenAlex / C-prefix form works in works filter)
 TARGET_CONCEPTS = [
@@ -61,9 +62,17 @@ def _load_written_ids(output_path: Path) -> set[str]:
     return ids
 
 
+def _add_api_key(params: dict) -> dict:
+    """Inject OPENALEX_API_KEY when set — unlocks higher rate limits."""
+    if OPENALEX_API_KEY:
+        params = dict(params)
+        params["api_key"] = OPENALEX_API_KEY
+    return params
+
+
 @retry(stop=stop_after_attempt(5), wait=wait_exponential(min=1, max=30))
 async def fetch_page(client: httpx.AsyncClient, url: str, params: dict | None = None) -> dict:
-    r = await client.get(url, params=params or {})
+    r = await client.get(url, params=_add_api_key(params or {}))
     r.raise_for_status()
     return r.json()
 
@@ -189,6 +198,8 @@ async def main(
         return 0
 
     written_this_run = 0
+    if OPENALEX_API_KEY:
+        print(f"Using OpenAlex API key: {OPENALEX_API_KEY[:6]}…")
     headers = {"User-Agent": f"ReviewerMatch (mailto:{email})"}
     limits = httpx.Limits(max_connections=10)
     timeout = httpx.Timeout(30.0)
@@ -263,7 +274,13 @@ async def main(
 def _cli() -> None:
     email = os.environ.get("OPENALEX_EMAIL", "").strip()
     if not email:
-        raise SystemExit("Set OPENALEX_EMAIL environment variable")
+        raise SystemExit("Set OPENALEX_EMAIL environment variable (e.g. your@email.com)")
+
+    if not OPENALEX_API_KEY:
+        print(
+            "Tip: set OPENALEX_API_KEY for higher rate limits "
+            "(see https://openalex.org/pricing)."
+        )
 
     out = Path(os.environ.get("OPENALEX_OUTPUT", "data/authors_raw.jsonl"))
     asyncio.run(main(email, out))
