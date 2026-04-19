@@ -30,7 +30,16 @@ async def load_from_json(path: Path, session: AsyncSession) -> int:
     with path.open(encoding="utf-8") as f:
         records = json.load(f)
 
+    # Deduplicate by openalex_id, keeping the entry with the lowest faiss_row_id
+    seen: dict[str, dict] = {}
     for rec in sorted(records, key=lambda r: r["faiss_row_id"]):
+        oid = rec["openalex_id"]
+        if oid not in seen:
+            seen[oid] = rec
+    records = list(seen.values())
+    print(f"After dedup: {len(records)} unique authors")
+
+    for rec in records:
         aid = rec["faiss_row_id"]
         recent = rec.get("recent_works") or []
         author = Author(
