@@ -23,6 +23,7 @@ class Settings(BaseSettings):
 
     openalex_email: str = ""
     openalex_base_url: str = "https://api.openalex.org"
+    openalex_api_key: str = ""
     anthropic_api_key: str = ""
     free_tier_daily_limit: int = 3
 
