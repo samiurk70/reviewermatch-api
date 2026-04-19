@@ -452,7 +452,7 @@ The static site at `web/` and the edge function at `api/match.js` are deployed t
 | **Reranker**      | Transparent weighted heuristic (similarity + h-index + recency)        |
 | **Ingestion**     | OpenAlex public API via `httpx` + `tenacity` retries                   |
 | **Container**     | Docker on Railway — CPU-only PyTorch, HF model pre-baked               |
-| **Frontend**      | Static HTML + vanilla JS with a pearly-marble liquid-glass design      |
+| **Frontend**      | Static HTML + vanilla JS       |
 | **Fonts**         | Inter Tight (sans) + Fraunces (italic accent), system Helvetica Neue   |
 | **Edge proxy**    | Vercel Edge Function — hides API key, rate-limits free tier            |
 
