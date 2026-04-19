@@ -1,0 +1,31 @@
+# Local build spec and Cursor prompt pack (keep out of version control)
+/00_BUILD_PLAN.md
+/01_REPO_SETUP.md
+/02_DATA_INGESTION.md
+/03_COLAB_NOTEBOOK.md
+/04_API_ENDPOINTS.md
+/05_FRONTEND.md
+/06_DEPLOYMENT.md
+/07_LAUNCH_POST.md
+/08_CURSOR_PROMPTS.md
+
+# Python / local env
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Secrets and local DB
+.env
+.env.local
+*.sqlite
+*.sqlite3
+
+# Large / generated data (keep locally; use Colab bundle or scripts to recreate)
+data/*.faiss
+data/authors_meta.json
+data/authors_raw.jsonl
+data/reviewermatch.db

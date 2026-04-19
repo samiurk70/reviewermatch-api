@@ -1,0 +1,6 @@
+data/raw/
+data/grants.db
+# data/grants.faiss and ml/model.pkl are intentionally NOT excluded here.
+# They are committed to git and baked into the Docker image at build time.
+__pycache__/
+.pytest_cache/

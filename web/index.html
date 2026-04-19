@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReviewerMatch — Find the right researchers in seconds</title>
+  <meta name="description" content="Drop in your paper abstract, get a ranked shortlist of researchers matched by semantic content. Built for reviewers, collaborators, and citations.">
+
+  <meta property="og:title" content="ReviewerMatch">
+  <meta property="og:description" content="Semantic researcher discovery for reviewers, collaborators, and citations.">
+  <meta property="og:type" content="website">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif; }
+    .gradient-bg {
+      background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%);
+    }
+  </style>
+</head>
+<body class="gradient-bg min-h-screen">
+
+  <header class="max-w-4xl mx-auto px-6 pt-16 pb-8">
+    <div class="text-center mb-8">
+      <h1 class="text-5xl font-bold text-gray-900 mb-4">
+        ReviewerMatch
+      </h1>
+      <p class="text-xl text-gray-600 max-w-2xl mx-auto">
+        Drop in your paper abstract. Get a ranked shortlist of the researchers most relevant to your work — in seconds.
+      </p>
+      <p class="text-sm text-gray-500 mt-3">
+        For finding reviewers · collaborators · citations · PhD supervisors
+      </p>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+      <label for="query" class="block text-sm font-semibold text-gray-700 mb-2">
+        Your abstract or research description
+      </label>
+      <textarea
+        id="query"
+        rows="6"
+        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+        placeholder="Paste an abstract or describe your research. E.g. 'We develop spiking neural networks for energy-efficient anomaly detection in network intrusion datasets, comparing timestep-performance tradeoffs on NSL-KDD...'"
+      ></textarea>
+
+      <div class="flex flex-wrap items-center justify-between mt-4 gap-3">
+        <div class="flex items-center gap-3 text-sm text-gray-600">
+          <label class="flex items-center gap-1">
+            <span>Top</span>
+            <select id="topN" class="border border-gray-300 rounded px-2 py-1">
+              <option value="10">10</option>
+              <option value="20" selected>20</option>
+              <option value="30">30</option>
+              <option value="50">50</option>
+            </select>
+          </label>
+          <label class="flex items-center gap-1">
+            <span>Min h-index</span>
+            <input id="minH" type="number" min="0" max="200" value="0" class="border border-gray-300 rounded px-2 py-1 w-16" title="0 = no minimum">
+          </label>
+        </div>
+        <button
+          type="button"
+          id="submitBtn"
+          class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Find researchers
+        </button>
+      </div>
+    </div>
+
+    <p class="text-center text-xs text-gray-500 mt-3">
+      Free tier: 3 searches/day (via hosted proxy). <a href="#pro" class="text-indigo-600 underline">Pro plans</a>
+    </p>
+  </header>
+
+  <section id="results" class="max-w-4xl mx-auto px-6 py-8 hidden">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-2xl font-semibold text-gray-900">Results</h2>
+      <span id="meta" class="text-sm text-gray-500"></span>
+    </div>
+    <div id="resultsList" class="space-y-3"></div>
+  </section>
+
+  <div id="error" class="max-w-4xl mx-auto px-6 py-4 hidden">
+    <div class="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3">
+      <span id="errorMsg"></span>
+    </div>
+  </div>
+
+  <div id="loading" class="max-w-4xl mx-auto px-6 py-8 hidden text-center">
+    <div class="inline-block animate-spin rounded-full h-8 w-8 border-4 border-indigo-600 border-t-transparent"></div>
+    <p class="text-gray-600 mt-3">Matching your abstract against the researcher index…</p>
+  </div>
+
+  <section class="max-w-4xl mx-auto px-6 py-16">
+    <h2 class="text-2xl font-semibold text-center mb-8">How it works</h2>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="bg-white rounded-xl p-6 shadow-sm">
+        <div class="text-3xl mb-2">1</div>
+        <h3 class="font-semibold mb-2">We index public data</h3>
+        <p class="text-sm text-gray-600">Active ML/CS researchers from OpenAlex, with profiles embedded into a shared semantic space (scalable to 150k+ rows).</p>
+      </div>
+      <div class="bg-white rounded-xl p-6 shadow-sm">
+        <div class="text-3xl mb-2">2</div>
+        <h3 class="font-semibold mb-2">You paste an abstract</h3>
+        <p class="text-sm text-gray-600">We embed your text with the same model and search with FAISS — no keyword guessing.</p>
+      </div>
+      <div class="bg-white rounded-xl p-6 shadow-sm">
+        <div class="text-3xl mb-2">3</div>
+        <h3 class="font-semibold mb-2">You get a ranked shortlist</h3>
+        <p class="text-sm text-gray-600">Ranked by similarity, h-index, and recency. Each row highlights recent works that support the match.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="pro" class="max-w-3xl mx-auto px-6 py-16">
+    <h2 class="text-2xl font-semibold text-center mb-8">Pro plans</h2>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="bg-white rounded-xl p-6 shadow-sm text-center">
+        <h3 class="font-semibold text-lg">Free</h3>
+        <p class="text-3xl font-bold my-3">£0</p>
+        <ul class="text-sm text-gray-600 space-y-2 mt-4 text-left">
+          <li>3 searches/day</li>
+          <li>Top 10 results</li>
+        </ul>
+      </div>
+      <div class="bg-indigo-600 text-white rounded-xl p-6 shadow-lg text-center">
+        <h3 class="font-semibold text-lg">Pro</h3>
+        <p class="text-3xl font-bold my-3">£9/mo</p>
+        <ul class="text-sm space-y-2 mt-4 text-left">
+          <li>Unlimited searches</li>
+          <li>Top 50 results</li>
+          <li>CSV export</li>
+          <li>Conflict-of-interest filters</li>
+        </ul>
+        <a href="mailto:hello@example.com?subject=ReviewerMatch%20Pro%20waitlist"
+           class="mt-4 inline-block bg-white text-indigo-600 px-4 py-2 rounded-lg font-semibold text-sm">
+          Join waitlist
+        </a>
+      </div>
+      <div class="bg-white rounded-xl p-6 shadow-sm text-center">
+        <h3 class="font-semibold text-lg">Lab</h3>
+        <p class="text-3xl font-bold my-3">£49/mo</p>
+        <ul class="text-sm text-gray-600 space-y-2 mt-4 text-left">
+          <li>5 seats</li>
+          <li>Shared workspace</li>
+          <li>Reviewer lists with COI</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer class="max-w-4xl mx-auto px-6 py-8 text-center text-sm text-gray-500">
+    Built with public data from OpenAlex · Not affiliated with any publisher · <a href="#" class="underline">Privacy</a>
+  </footer>
+
+  <script>
+    /**
+     * Production: Vercel /api/match proxy (injects API key server-side).
+     * Local API: run `vercel dev` with REVIEWERMATCH_* in .env.local, or open
+     *   /web/index.html?api=http://127.0.0.1:8000/api/v1/match&key=YOUR_DEV_KEY
+     * (dev only — never ship a real key in the URL in production).
+     */
+    function apiConfig() {
+      const params = new URLSearchParams(window.location.search);
+      const direct = params.get("api");
+      const key = params.get("key");
+      if (direct) {
+        return { url: direct, apiKey: key || "" };
+      }
+      return { url: "/api/match", apiKey: "" };
+    }
+
+    const submitBtn = document.getElementById("submitBtn");
+    const queryEl = document.getElementById("query");
+    const topNEl = document.getElementById("topN");
+    const minHEl = document.getElementById("minH");
+    const resultsEl = document.getElementById("results");
+    const resultsListEl = document.getElementById("resultsList");
+    const metaEl = document.getElementById("meta");
+    const loadingEl = document.getElementById("loading");
+    const errorEl = document.getElementById("error");
+    const errorMsgEl = document.getElementById("errorMsg");
+
+    submitBtn.addEventListener("click", async () => {
+      const query = queryEl.value.trim();
+      if (query.length < 50) {
+        showError("Please paste at least a full abstract (50+ characters).");
+        return;
+      }
+
+      hideAll();
+      loadingEl.classList.remove("hidden");
+      submitBtn.disabled = true;
+
+      const { url: API_ENDPOINT, apiKey } = apiConfig();
+      const headers = { "Content-Type": "application/json" };
+      if (apiKey) headers["X-API-Key"] = apiKey;
+
+      try {
+        const res = await fetch(API_ENDPOINT, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            query,
+            top_n: parseInt(topNEl.value, 10),
+            min_h_index: parseInt(minHEl.value, 10) || null,
+          }),
+        });
+
+        if (res.status === 429) {
+          let msg = "Daily free limit reached. Upgrade to Pro for unlimited searches.";
+          try {
+            const j = await res.json();
+            if (j.detail) msg = typeof j.detail === "string" ? j.detail : msg;
+            if (j.error) msg = j.error;
+          } catch (_) { /* use default */ }
+          throw new Error(msg);
+        }
+        if (!res.ok) {
+          let detail = `API error ${res.status}`;
+          try {
+            const j = await res.json();
+            if (j.detail) detail = typeof j.detail === "string" ? j.detail : JSON.stringify(j.detail);
+          } catch (_) {
+            const t = await res.text();
+            if (t) detail = t.slice(0, 200);
+          }
+          throw new Error(detail);
+        }
+
+        const data = await res.json();
+        renderResults(data);
+      } catch (e) {
+        showError(e.message || String(e));
+      } finally {
+        loadingEl.classList.add("hidden");
+        submitBtn.disabled = false;
+      }
+    });
+
+    function renderResults(data) {
+      const fresh = data.data_freshness ? ` · data ${data.data_freshness}` : "";
+      metaEl.textContent = `${data.total_matched} matches · ${Math.round(data.processing_time_ms)} ms${fresh}`;
+      const rows = data.results || [];
+      resultsListEl.innerHTML = rows.map(r => {
+        const cited = (r.cited_by_count != null ? r.cited_by_count : 0).toLocaleString();
+        const works = (r.matching_works || []).map(w => `
+                  <li class="leading-snug">
+                    · ${escapeHtml(w.title || "Untitled")}
+                    ${w.year ? `<span class="text-gray-400">(${w.year})</span>` : ""}
+                  </li>`).join("");
+        const worksBlock = (r.matching_works && r.matching_works.length) ? `
+            <div class="mt-3 pt-3 border-t border-gray-100">
+              <p class="text-xs font-semibold text-gray-500 mb-1">RECENT WORK</p>
+              <ul class="text-sm text-gray-700 space-y-1">${works}
+              </ul>
+            </div>` : "";
+        const sim = typeof r.similarity === "number"
+          ? `<div class="text-xs text-gray-500">sim ${r.similarity.toFixed(3)}</div>` : "";
+        return `
+        <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition">
+          <div class="flex items-start justify-between">
+            <div class="flex-1 min-w-0">
+              <a href="${escapeHtml(r.profile_url)}" target="_blank" rel="noopener noreferrer" class="font-semibold text-indigo-700 hover:underline">
+                ${escapeHtml(r.display_name)}
+              </a>
+              <p class="text-sm text-gray-600">
+                ${escapeHtml(r.institution_name || "Unknown institution")}
+                ${r.institution_country ? ` · ${escapeHtml(r.institution_country)}` : ""}
+              </p>
+              <p class="text-xs text-gray-500 mt-1">
+                h-index ${r.h_index} · ${r.works_count} works · ${cited} citations
+              </p>
+            </div>
+            <div class="text-right ml-4 shrink-0">
+              <div class="text-2xl font-bold text-indigo-600">${Number(r.score).toFixed(1)}</div>
+              <div class="text-xs text-gray-500">match score</div>
+              ${sim}
+            </div>
+          </div>
+          ${worksBlock}
+        </div>`;
+      }).join("");
+      resultsEl.classList.remove("hidden");
+    }
+
+    function showError(msg) {
+      errorMsgEl.textContent = msg;
+      errorEl.classList.remove("hidden");
+    }
+
+    function hideAll() {
+      resultsEl.classList.add("hidden");
+      errorEl.classList.add("hidden");
+      loadingEl.classList.add("hidden");
+    }
+
+    function escapeHtml(s) {
+      if (s == null) return "";
+      return String(s).replace(/[&<>"']/g, c => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      })[c]);
+    }
+  </script>
+</body>
+</html>
