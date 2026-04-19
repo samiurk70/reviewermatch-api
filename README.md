@@ -18,10 +18,13 @@ uvicorn app.main:app --reload
 
 Forked from [grantmatch-api](https://github.com/samiurk70/grantmatch-api); grant-specific ingestion and ML reranker removed.
 
+## Data (not in git)
+
+`data/authors.faiss`, `data/authors_meta.json`, and similar generated files are **gitignored** (GitHub size limits). After the Colab pipeline, copy the bundle into `data/` and run `python -m scripts.load_metadata`.
+
 ## API
 
 - `GET /api/v1/` — service info
 - `GET /api/v1/health` — DB + index status
-- `POST /api/v1/match` — body: `{ "abstract": "...", "top_n": 10 }` (header `X-API-Key`)
+- `POST /api/v1/match` — body: `{ "query": "...", "top_n": 10 }` (`abstract` also accepted; header `X-API-Key`)
 - `GET /api/v1/author/{id}` — author detail
-# reviewermatch-api
