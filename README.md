@@ -36,7 +36,7 @@ ReviewerMatch is a full-stack ML application that scores every indexed researche
 | --- | --- |
 | ![Landing](docs/screenshots/Hero.png) | ![Results](docs/screenshots/Results.png) |
 
-*Left: pearly-marble hero with the abstract textarea and filters.  Right: ranked researcher cards with h-index / works / citations pills and recent-work explanations.*
+*Left: Landing Page for the Web app running the ML-API.  Right: ranked researcher cards with h-index / works / citations pills and recent-work explanations.*
 
 ---
 
@@ -47,7 +47,7 @@ ReviewerMatch is a full-stack ML application that scores every indexed researche
 │  Static web + Edge proxy · Vercel                           │
 │  reviewermatch.vercel.app                                   │
 │                                                             │
-│  web/index.html · pearly liquid-glass UI                    │
+│  web/index.html · Build on modern CSS components                   │
 │  api/match.js   · Vercel Edge → proxies to Railway          │
 │         │  POST /api/match  (X-API-Key injected server-side)│
 └─────────────────────────────────────────────────────────────┘
