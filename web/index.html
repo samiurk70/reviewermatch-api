@@ -677,7 +677,7 @@
         <label for="query" class="field-label">Abstract or research description</label>
         <textarea
           id="query" rows="6" class="search-textarea"
-          placeholder="Paste an abstract or describe your research. e.g. 'We develop spiking neural networks for energy-efficient anomaly detection in network intrusion datasets, comparing timestep-performance tradeoffs on NSL-KDD…'"
+          placeholder="Paste an abstract or describe your research. e.g. 'We develop artificial neural networks for energy-efficient prediction model in network intrusion datasets, comparing timestep-performance tradeoffs on NSL-KDD…'"
         ></textarea>
         <div class="char-count" id="charCount">50+ characters to search</div>
 
@@ -865,23 +865,30 @@
           }),
         });
 
+        // Read body once as text, then parse — avoids "body stream already read" errors
+        const rawText = await res.text();
+        let parsed = null;
+        try { parsed = JSON.parse(rawText); } catch (_) {}
+
         if (res.status === 429) {
           let msg = "Daily free limit reached. Upgrade to Pro for unlimited searches.";
-          try { const j = await res.json(); if (j.error) msg = j.error; if (j.detail) msg = j.detail; } catch (_) {}
+          if (parsed) { if (parsed.error) msg = parsed.error; if (parsed.detail) msg = parsed.detail; }
           throw new Error(msg);
         }
         if (!res.ok) {
           let detail = `API error ${res.status}`;
-          try {
-            const j = await res.json();
-            if (j.detail) detail = typeof j.detail === "string" ? j.detail : JSON.stringify(j.detail);
-          } catch (_) {
-            const t = await res.text(); if (t) detail = t.slice(0, 200);
+          if (parsed && parsed.detail) {
+            detail = typeof parsed.detail === "string" ? parsed.detail : JSON.stringify(parsed.detail);
+          } else if (parsed && parsed.error) {
+            detail = parsed.error;
+          } else if (rawText) {
+            detail = rawText.slice(0, 300);
           }
           throw new Error(detail);
         }
+        if (!parsed) throw new Error("Invalid response from server");
 
-        renderResults(await res.json());
+        renderResults(parsed);
       } catch (e) {
         showError(e.message || String(e));
       } finally {
